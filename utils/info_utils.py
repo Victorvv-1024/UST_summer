@@ -153,7 +153,8 @@ def get_edge_info(weighted_edges, post_authors):
     
     # this gives a dataframe for all the nodes' attr. The missing attr for post nodes shoulg have value nan.
     all_node_merged_df = all_node_merged_df.merge(post_node_merged_df, on=['author'], how='left') 
-    
+    all_node_merged_df['ego_graph_density'].replace('', np.nan, inplace=True)
+    all_node_merged_df.dropna(subset=['ego_graph_density'], inplace=True)
     return all_node_merged_df
 
 """
