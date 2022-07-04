@@ -112,6 +112,7 @@ def create_t3_df(dataframe):
     level_1_comments = comments[comments['parent_id'] != 0]
     t3_df  = level_1_comments.groupby('parent_id')['author'].apply(list).reset_index(name='author')
     t3_df['sub_comments'] = t3_df['author'].progress_apply(lambda x:len(x))
+    t3_df.sort_values('sub_comments', inplace=True, ascending=False)
     
     posts = comments[comments['parent_id'] == 0]
     t3_name_id = create_name_id_dict(posts)
