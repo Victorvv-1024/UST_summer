@@ -123,11 +123,11 @@ def fit_lda_model(doc_word_matrix, n_topics=10, max_iter=100, batch_size=256):
 def create_t3_comment_id_dict(dataframe):    #create id:comment dataframe. Basically allows us to retrieve and concat the level_1 comments to their corresponding main posts later on
     name_id = {}
     dataframe[dataframe['parent_id'] == dataframe['link_id']]
-    dataframe['all_comments'] = dataframe.groupby(['parent_id'])['all_comments'].transform(lambda x : ' '.join(x))
+    dataframe['body'] = dataframe.groupby(['parent_id'])['body'].transform(lambda x : ' '.join(x))
     dataframe = dataframe.drop_duplicates()
     for index, row in dataframe.iterrows():
         key = dataframe.id.iloc[i]
-        value = dataframe.author.iloc[i]
+        value = dataframe.body.iloc[i]
 
         key_value_pair = {key:value}
 
