@@ -204,3 +204,47 @@ def create_complete_df(t1_name_id, t1_df, t3_name_id, t3_df):
     complete_df = is_main(complete_df, t1_name_id, t3_name_id)
     
     return complete_df
+
+def create_t3_comment_id_dict(comment_df):
+    """
+    A function to create id:comment dictionary. 
+    Args:
+        comment_df (): the comment dataframe
+
+    Returns:
+        dict: the key-value pair where key is the id, value is comment content
+    """
+    comment_id = {}
+    comment_df[comment_df['parent_id'] == comment_df['link_id']]
+    comment_df['all_comments'] = comment_df.groupby(['parent_id'])['all_comments'].transform(lambda x : ' '.join(x))
+    comment_df = comment_df.drop_duplicates()
+    for index, row in comment_df.iterrows():
+        key = row.id
+        value = row.body
+        
+        comment_id.update({key:value})
+        
+    return comment_id
+
+def total_post_dict(post_df, comment_id):
+    """
+    A function to concat main posts with their level 1 comments
+    Args:
+        post_df (): the post dataframe
+        comment_id (dict): he key-value pair where key is the id, value is comment content
+
+    Returns:
+        dict: the key-value pair where key is the id of post author, value is the post content + direct comment
+    """
+    total_dict = {}
+    
+    for index, row in post_df.iterrows():
+        body = row['selftext']
+        uid = str(row['parent_id']).split('_')[-1]
+        all_comments = comment_id[uid]
+        total_string = body + ' ' + all_comments
+        
+        key_value_pair = {uid:total_string}
+        total_dict.update(key_value_pair)
+        
+    return total_dict
