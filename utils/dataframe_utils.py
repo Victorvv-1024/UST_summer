@@ -9,6 +9,7 @@ import numpy as np
 
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from pyrsistent import freeze
 from tqdm.notebook import tqdm
 tqdm.pandas()
 
@@ -35,6 +36,24 @@ def create_name_id_dict(dataframe):
         name_id.update(key_value_pair)
     return name_id
 
+def create_post_comment_name_id(post_dataframe, comment_dataframe):
+    post_name_id = {}
+    comment_name_id = {}
+    post_dataframe['merged'] = post_dataframe.apply(lambda x: {x['author']:x['created_utc']}, axis=1)
+    comment_dataframe['merged'] = comment_dataframe.apply(lambda x: {x['author']:x['created_utc']}, axis = 1)
+    for index, row in post_dataframe.iterrows():
+        id = row.id
+        merged = row.merged
+        frozen_merged = frozenset((key, freeze(value)) for key, value in merged.items())
+        post_name_id.update({id:frozen_merged})
+    
+    for index, row in comment_dataframe.iterrows():
+        id = row.id
+        merged = row.merged
+        frozen_merged = frozenset((key, freeze(value)) for key, value in merged.items())
+        comment_name_id.update({id:frozen_merged})
+    
+    return post_name_id, comment_name_id
 
 """
 Create the daily sub-dataframes from a month dataframe
@@ -106,18 +125,17 @@ def create_t3_df(dataframe):
 
     Returns:
         dataframe: a dataframe of all post authors
-        dictionary: a dictionary has all id:name paris of the post dataframe
     """
+    
     comments = dataframe[dataframe['parent_id'] == dataframe['link_id']]
     level_1_comments = comments[comments['parent_id'] != 0]
-    t3_df  = level_1_comments.groupby('parent_id')['author'].apply(list).reset_index(name='author')
-    t3_df['sub_comments'] = t3_df['author'].progress_apply(lambda x:len(x))
+    level_1_comments['merged'] = level_1_comments.apply(lambda x: {x['author']:x['created_utc']}, axis=1) #merge author and created_utc into dict
+    t3_df  = level_1_comments.groupby('parent_id')['merged'].apply(list).reset_index(name='merged')
+    t3_df['sub_comments'] = t3_df['merged'].progress_apply(lambda x:len(x))
     t3_df.sort_values('sub_comments', inplace=True, ascending=False)
     
-    posts = comments[comments['parent_id'] == 0]
-    t3_name_id = create_name_id_dict(posts)
-
-    return t3_name_id, t3_df
+    
+    return t3_df
 
 """
 Create the t1-dataframe
@@ -130,19 +148,16 @@ def create_t1_df(dataframe):
 
     Returns:
         dataframe: a dataframe of all post authors
-        dictionary: a dictionary has all id:name paris of the post dataframe
     """
     level_1_comments = dataframe[dataframe['parent_id'] == dataframe['link_id']]
 
-    sub_comments = dataframe[~dataframe.index.isin(level_1_comments.index)]
-
-    t1_df  = sub_comments.groupby('parent_id')['author'].apply(list).reset_index(name='author')
-    t1_df['sub_comments'] = t1_df['author'].progress_apply(lambda x:len(x))
+    sub_comments = dataframe[~dataframe.index.isin(level_1_comments.index)] #setting the sub comments being those with index that are not in level_1_comments
+    sub_comments['merged'] = sub_comments.apply(lambda x: {x['author']:x['created_utc']}, axis=1) #merge author and created_utc into dict
+    t1_df  = sub_comments.groupby('parent_id')['merged'].apply(list).reset_index(name='merged')
+    t1_df['sub_comments'] = t1_df['merged'].progress_apply(lambda x:len(x))
     t1_df.sort_values('sub_comments', inplace=True, ascending=False)
-
-    t1_name_id = create_name_id_dict(sub_comments)   
-
-    return t1_name_id, t1_df
+    
+    return t1_df
 
 """
 Create the complete dataframe that includes an attribute that analyzes if it is a main post
@@ -160,6 +175,7 @@ def is_main(dataframe, t1_name_id, t3_name_id):
     """
     main_list = []
     parent_author_list = []
+    parent_utc_list = []
     dataframe = dataframe.reset_index(drop = True)
     
     for index, row in dataframe.iterrows():
@@ -169,20 +185,28 @@ def is_main(dataframe, t1_name_id, t3_name_id):
         if pre == 't1':
             main_list.append(0)
             try:
-                parent_author = t1_name_id[uid]
+                parent_author = t1_name_id[uid].keys()
                 parent_author_list.append(parent_author)
+                parent_utc = t1_name_id[uid].values()
+                parent_utc_list.append(parent_utc)
             except:
                 parent_author_list.append(np.nan)
+                parent_utc_list.append(np.nan)
         else:
             main_list.append(1)
             try:
-                parent_author = t3_name_id[uid]
+                parent_author = t3_name_id[uid].keys()
                 parent_author_list.append(parent_author)
+                parent_utc = t3_name_id[uid].values()
+                parent_utc_list.append(parent_utc)
             except:
-                parent_author_list.append(np.nan)        
+                parent_author_list.append(np.nan)
+                parent_utc_list.append(np.nan)
 
     dataframe['main_post'] =  main_list
     dataframe['parent_author'] = parent_author_list
+    dataframe['parent_utc'] = parent_utc_list
+    
     return dataframe
 
 def create_complete_df(t1_name_id, t1_df, t3_name_id, t3_df):

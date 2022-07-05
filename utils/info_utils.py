@@ -41,13 +41,11 @@ def get_parallel_edges(comment_df, post_df):
     Returns:
         dataframe: a dataframe of edge list
     """
-    zeros = np.zeros(post_df.shape[0])
-    post_df['parent_id'] = pd.Series(zeros)
-    post_df['link_id'] = pd.Series(zeros)
-    
     source_list = []
     target_list = []
     is_main_list = []
+    source_utc_list = []
+    target_utc_list = []
     non_singleton = set()
     potential_singleton = set()
     non_single_post = set()
@@ -56,8 +54,9 @@ def get_parallel_edges(comment_df, post_df):
     for index, row in comment_df.iterrows():
         target = row['parent_author']
         non_single_post.add(target)
-        author_list = row['author']
+        author_list = row['merged']
         post_type = row['parent_id'].split('_')[0]
+        target_utc = row['parent_utc']
         if post_type == 't1':
             main_post = 0
         else:
@@ -65,13 +64,18 @@ def get_parallel_edges(comment_df, post_df):
         if target != np.nan:
             non_singleton.add(target)
             for author in author_list:
-                source_list.append(author)
+                author_name, created_utc = next((str(k), str(v)) for k, v in author.items())
+                source_list.append(author_name)
                 target_list.append(target)
-                non_singleton.add(author)
+                source_utc_list.append(author.values())
+                target_utc_list.append(target_utc)
+                non_singleton.add(author_name)
                 is_main_list.append(main_post)
         else:
             for author in author_list:
-                potential_singleton.add(author)
+                author_name, created_utc = next((str(k), str(v)) for k, v in author.items())
+                potential_singleton.add(author_name)
+    
     single_main = authordf - non_single_post
     singletons = set(potential_singleton) - set(non_singleton)
     singletons = singletons.union(single_main)
@@ -79,8 +83,10 @@ def get_parallel_edges(comment_df, post_df):
         source_list.append(singleton)
         target_list.append(singleton)
         is_main_list.append(np.nan)
+        source_utc_list.append(np.nan)
+        target_utc_list.append(np.nan)
     
-    edge_list = pd.DataFrame(list(zip(source_list, target_list, is_main_list)), columns = ['Source', 'Target', 'is_main'])
+    edge_list = pd.DataFrame(list(zip(source_list, target_list, is_main_list, source_utc_list, target_utc_list)), columns = ['Source', 'Target', 'is_main', 'source_utc', 'target_utc'])
     
     return edge_list
 
