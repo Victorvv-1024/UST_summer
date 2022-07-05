@@ -9,7 +9,6 @@ import numpy as np
 
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from pyrsistent import freeze
 from tqdm.notebook import tqdm
 tqdm.pandas()
 
@@ -123,7 +122,7 @@ def create_t3_df(dataframe):
     
     comments = dataframe[dataframe['parent_id'] == dataframe['link_id']]
     level_1_comments = comments[comments['parent_id'] != 0]
-    level_1_comments['merged'] = level_1_comments.apply(lambda x: {x['author']:x['created_utc']}, axis=1) #merge author and created_utc into dict
+    level_1_comments['merged'] = level_1_comments.apply(lambda x: [x['author'],x['created_utc']], axis=1) #merge author and created_utc into dict
     t3_df  = level_1_comments.groupby('parent_id')['merged'].apply(list).reset_index(name='merged')
     t3_df['sub_comments'] = t3_df['merged'].progress_apply(lambda x:len(x))
     t3_df.sort_values('sub_comments', inplace=True, ascending=False)
@@ -146,7 +145,7 @@ def create_t1_df(dataframe):
     level_1_comments = dataframe[dataframe['parent_id'] == dataframe['link_id']]
 
     sub_comments = dataframe[~dataframe.index.isin(level_1_comments.index)] #setting the sub comments being those with index that are not in level_1_comments
-    sub_comments['merged'] = sub_comments.apply(lambda x: {x['author']:x['created_utc']}, axis=1) #merge author and created_utc into dict
+    sub_comments['merged'] = sub_comments.apply(lambda x: [x['author'],x['created_utc']], axis=1) #merge author and created_utc into dict
     t1_df  = sub_comments.groupby('parent_id')['merged'].apply(list).reset_index(name='merged')
     t1_df['sub_comments'] = t1_df['merged'].progress_apply(lambda x:len(x))
     t1_df.sort_values('sub_comments', inplace=True, ascending=False)
@@ -179,22 +178,16 @@ def is_main(dataframe, t1_name_id, t3_name_id):
         if pre == 't1':
             main_list.append(0)
             try:
-                author_name, created_utc = next((str(k), str(v)) for k, v in t1_name_id[uid].items())
-                parent_author = author_name
-                parent_author_list.append(parent_author)
-                parent_utc = created_utc
-                parent_utc_list.append(parent_utc)
+                parent_author_list.append(t1_name_id[uid][0])
+                parent_utc_list.append(t1_name_id[uid][1])
             except:
                 parent_author_list.append(np.nan)
                 parent_utc_list.append(np.nan)
         else:
             main_list.append(1)
             try:
-                author_name, created_utc = next((str(k), str(v)) for k, v in t3_name_id[uid].items())
-                parent_author = author_name
-                parent_author_list.append(parent_author)
-                parent_utc = created_utc
-                parent_utc_list.append(parent_utc)
+                parent_author_list.append(t3_name_id[uid][0])
+                parent_utc_list.append(t3_name_id[uid][1])
             except:
                 parent_author_list.append(np.nan)
                 parent_utc_list.append(np.nan)
