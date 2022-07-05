@@ -185,9 +185,10 @@ def is_main(dataframe, t1_name_id, t3_name_id):
         if pre == 't1':
             main_list.append(0)
             try:
-                parent_author = t1_name_id[uid].keys()
+                author_name, created_utc = next((str(k), str(v)) for k, v in t1_name_id[uid].items())
+                parent_author = author_name
                 parent_author_list.append(parent_author)
-                parent_utc = t1_name_id[uid].values()
+                parent_utc = created_utc
                 parent_utc_list.append(parent_utc)
             except:
                 parent_author_list.append(np.nan)
@@ -195,9 +196,10 @@ def is_main(dataframe, t1_name_id, t3_name_id):
         else:
             main_list.append(1)
             try:
-                parent_author = t3_name_id[uid].keys()
+                author_name, created_utc = next((str(k), str(v)) for k, v in t3_name_id[uid].items())
+                parent_author = author_name
                 parent_author_list.append(parent_author)
-                parent_utc = t3_name_id[uid].values()
+                parent_utc = created_utc
                 parent_utc_list.append(parent_utc)
             except:
                 parent_author_list.append(np.nan)
