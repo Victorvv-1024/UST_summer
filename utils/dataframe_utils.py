@@ -39,19 +39,13 @@ def create_name_id_dict(dataframe):
 def create_post_comment_name_id(post_dataframe, comment_dataframe):
     post_name_id = {}
     comment_name_id = {}
-    post_dataframe['merged'] = post_dataframe.apply(lambda x: {x['author']:x['created_utc']}, axis=1)
-    comment_dataframe['merged'] = comment_dataframe.apply(lambda x: {x['author']:x['created_utc']}, axis = 1)
+    post_dataframe['merged'] = post_dataframe.apply(lambda x: [x['author'],x['created_utc']], axis=1)
+    comment_dataframe['merged'] = comment_dataframe.apply(lambda x: [x['author'],x['created_utc']], axis = 1)
     for index, row in post_dataframe.iterrows():
-        id = row.id
-        merged = row.merged
-        frozen_merged = frozenset((key, freeze(value)) for key, value in merged.items())
-        post_name_id.update({id:frozen_merged})
+        post_name_id.update({row.id:row.merged})
     
     for index, row in comment_dataframe.iterrows():
-        id = row.id
-        merged = row.merged
-        frozen_merged = frozenset((key, freeze(value)) for key, value in merged.items())
-        comment_name_id.update({id:frozen_merged})
+        comment_name_id.update({row.id:row.merged})
     
     return post_name_id, comment_name_id
 

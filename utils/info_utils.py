@@ -64,17 +64,15 @@ def get_parallel_edges(comment_df, post_df):
         if target != np.nan:
             non_singleton.add(target)
             for author in author_list:
-                author_name, created_utc = next((str(k), str(v)) for k, v in author.items())
-                source_list.append(author_name)
+                source_list.append(author[0])
                 target_list.append(target)
-                source_utc_list.append(author.values())
+                source_utc_list.append(author[1])
                 target_utc_list.append(target_utc)
-                non_singleton.add(author_name)
+                non_singleton.add(author[0])
                 is_main_list.append(main_post)
         else:
             for author in author_list:
-                author_name, created_utc = next((str(k), str(v)) for k, v in author.items())
-                potential_singleton.add(author_name)
+                potential_singleton.add(author[0])
     
     single_main = authordf - non_single_post
     singletons = set(potential_singleton) - set(non_singleton)
