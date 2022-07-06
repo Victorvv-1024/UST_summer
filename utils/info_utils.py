@@ -89,7 +89,7 @@ def get_parallel_edges(comment_df, post_df, startdate):
         source_utc_list.append(np.nan)
         target_utc_list.append(np.nan)
         older_post_list.append(np.nan)
-    edge_list = pd.DataFrame(list(zip(source_list, target_list, is_main_list, source_utc_list, target_utc_list)), columns = ['Source', 'Target', 'is_main', 'source_utc', 'target_utc'])
+    edge_list = pd.DataFrame(list(zip(source_list, target_list, is_main_list, source_utc_list, target_utc_list, older_post_list)), columns = ['Source', 'Target', 'is_main', 'source_utc', 'target_utc', 'main_is_old'])
     
     return edge_list
 
