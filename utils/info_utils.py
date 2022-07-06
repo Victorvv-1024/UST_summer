@@ -31,7 +31,7 @@ def merge_df(comment_df, post_df):
     concat_df = pd.concat([comment_df, post_df])
     return concat_df
 
-def get_parallel_edges(comment_df, post_df):
+def get_parallel_edges(comment_df, post_df, startdate):
     """
     A function that returns the parallel edge list dataframe that has 3 attributes Source, Target and is_main
     Args:
@@ -41,6 +41,7 @@ def get_parallel_edges(comment_df, post_df):
     Returns:
         dataframe: a dataframe of edge list
     """
+    older_post_list = []
     source_list = []
     target_list = []
     is_main_list = []
@@ -70,6 +71,10 @@ def get_parallel_edges(comment_df, post_df):
                 target_utc_list.append(target_utc)
                 non_singleton.add(author[0])
                 is_main_list.append(main_post)
+                if author[1] > startdate:
+                    older_post_list.append(0)
+                else:
+                    older_post_list.append(1)
         else:
             for author in author_list:
                 potential_singleton.add(author[0])
@@ -83,7 +88,7 @@ def get_parallel_edges(comment_df, post_df):
         is_main_list.append(np.nan)
         source_utc_list.append(np.nan)
         target_utc_list.append(np.nan)
-    
+        older_post_list.append(np.nan)
     edge_list = pd.DataFrame(list(zip(source_list, target_list, is_main_list, source_utc_list, target_utc_list)), columns = ['Source', 'Target', 'is_main', 'source_utc', 'target_utc'])
     
     return edge_list
