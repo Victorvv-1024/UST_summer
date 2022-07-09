@@ -316,3 +316,10 @@ def get_type_df(p_o, p_c, m_p_c_o, c_c_o, n_i_c_o):
         'Members who only reply to other comments', 'Unidentifiable commenters'])
     
     return type_df
+
+def generate_close_centra(month_edgelist, year, month):
+    month_edgelist = month_edgelist[month_edgelist['main_is_old'] != 1]
+    month_list = create_subedgelist(year, month, month_edgelist)
+    for day_edge in month_list:
+        G = nx.from_pandas_edgelist(, source = "Source", target = "Target", edge_attr= ["weight", "inverse_weight"], create_using = nx.DiGraph())
+        
