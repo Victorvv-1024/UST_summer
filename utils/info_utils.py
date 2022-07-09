@@ -42,6 +42,7 @@ def get_parallel_edges(comment_df, post_df, startdate):
     Returns:
         dataframe: a dataframe of edge list
     """
+    startdate = float(startdate)
     older_post_list = []
     source_list = []
     target_list = []
