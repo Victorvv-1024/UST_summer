@@ -29,6 +29,7 @@ def merge_df(comment_df, post_df):
     post_df['parent_id'] = pd.Series(col_zero)
     post_df['link_id'] = pd.Series(col_zero)
     concat_df = pd.concat([comment_df, post_df])
+    concat_df = concat_df.reset_index(drop=True)
     return concat_df
 
 def get_parallel_edges(comment_df, post_df, startdate):
