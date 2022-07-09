@@ -38,11 +38,10 @@ def get_parallel_edges(comment_df, post_df, startdate):
     Args:
         comment_df (): the comment dataframe
         post_df (): the post dataframe
-
     Returns:
         dataframe: a dataframe of edge list
     """
-    startdate = float(startdate)
+    startdate = startdate.timestamp()
     older_post_list = []
     source_list = []
     target_list = []
@@ -64,7 +63,7 @@ def get_parallel_edges(comment_df, post_df, startdate):
             main_post = 0
         else:
             main_post = 1
-        if target != np.nan:
+        if pd.isna(target) == False:
             non_singleton.add(target)
             for author in author_list:
                 source_list.append(author[0])
