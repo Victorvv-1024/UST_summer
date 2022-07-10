@@ -317,9 +317,29 @@ def get_type_df(p_o, p_c, m_p_c_o, c_c_o, n_i_c_o):
     
     return type_df
 
-def generate_close_centra(month_edgelist, year, month):
+def generate_sub_edgelist(month_edgelist, year, month):
+    """
+    A function that prepares the month edgelist into a list of daily edgelists suitable 
+    for computing the daily network parameters
+    """
     month_edgelist = month_edgelist[month_edgelist['main_is_old'] != 1]
+    month_edgelist = month_edgelist[['Source', 'Target']]
+    month_edgelist = dd.from_pandas(month_edgelist, npartitions = 8).groupby(['Source', 'Target']).sum().compute()
+    month_edgelist = month_edgelist.groupby(month_edgelist.columns.tolist()).size().reset_index().rename(columns={0:'weight'})
+    month_edgelist['inverse_weight'] = 1/month_edgelist['weight']
     month_list = create_subedgelist(year, month, month_edgelist)
+    
+    return month_list
+
+    
+    
+def generate_close_centra(month_list, post_name_id):
+    big_df = pd.Dataframe.from_dict(post_name_id)
+    big_df = big_df.iloc[: , 1:]
+    
     for day_edge in month_list:
-        G = nx.from_pandas_edgelist(, source = "Source", target = "Target", edge_attr= ["weight", "inverse_weight"], create_using = nx.DiGraph())
+        G = nx.from_pandas_edgelist(edge_list, source = "Source", target = "Target", edge_attr= ["weight", "inverse_weight"], create_using = nx.DiGraph())
+        for node in post_author_list:
+            closeness_cent = nx.closeness_centrality(G, u = node, distance='inverse_weight')
+        closeness_cent = pd.DataFrame(closeness_cent_dict.items(), columns=['author', 'closeness_cent'])
         
