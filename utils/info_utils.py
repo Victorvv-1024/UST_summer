@@ -323,11 +323,9 @@ def generate_sub_edgelist(month_edgelist, year, month):
     for computing the daily network parameters
     """
     month_edgelist = month_edgelist[month_edgelist['main_is_old'] != 1]
-    month_edgelist = month_edgelist[['Source', 'Target']]
-    month_edgelist = dd.from_pandas(month_edgelist, npartitions = 8).groupby(['Source', 'Target']).sum().compute()
-    month_edgelist = month_edgelist.groupby(month_edgelist.columns.tolist()).size().reset_index().rename(columns={0:'weight'})
-    month_edgelist['inverse_weight'] = 1/month_edgelist['weight']
     month_list = create_subedgelist(year, month, month_edgelist)
+
+
     
     return month_list
 
@@ -337,8 +335,11 @@ def generate_close_centra(month_list, post_name_id, year, month):
     big_df = pd.DataFrame(post_name_id.items(), columns=['id', 'author'])
     big_df = big_df.iloc[: , 1:]
     big_df_set = set(big_df.iloc[:, 0].unique())
-    day = 0
+    day = 1
     for day_edge in month_list:
+        day_edge = day_edge[['Source', 'Target']]
+        day_edge = day_edge.groupby(day_edge.columns.tolist()).size().reset_index().rename(columns={0:'weight'})
+        day_edge['inverse_weight'] = 1/day_edge['weight']
         source_target_union = set(day_edge['Source'].unique()).union(set(day_edge['Target'].unique()))
         
         """
@@ -348,7 +349,7 @@ def generate_close_centra(month_list, post_name_id, year, month):
         """
         post_authors = big_df_set.intersection(source_target_union) 
         
-        G = nx.from_pandas_edgelist(edge_list, source = "Source", target = "Target", edge_attr= ["weight", "inverse_weight"], create_using = nx.DiGraph())
+        G = nx.from_pandas_edgelist(day_edge, source = "Source", target = "Target", edge_attr= ["weight", "inverse_weight"], create_using = nx.DiGraph())
         closeness_cent_dict = {}
         for node in post_authors:
             closeness_cent = nx.closeness_centrality(G, u = node, distance='inverse_weight')
@@ -356,7 +357,7 @@ def generate_close_centra(month_list, post_name_id, year, month):
         closeness_cent = pd.DataFrame(closeness_cent_dict.items(), columns=['author', '{date}'.format(date = str(year) + '_' + str(month) + '_' + str(day))])
         big_df.merge(closeness_cent, how='outer', on='author')
         day += 1
-    
+        print(day)
     return big_df
         
         
