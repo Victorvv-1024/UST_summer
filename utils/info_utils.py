@@ -333,8 +333,8 @@ def generate_sub_edgelist(month_edgelist, year, month):
 
     
     
-def generate_close_centra(month_list, post_name_id, month):
-    big_df = pd.Dataframe.from_dict(post_name_id)
+def generate_close_centra(month_list, post_name_id, year, month):
+    big_df = pd.DataFrame(post_name_id.items(), columns=['id', 'author'])
     big_df = big_df.iloc[: , 1:]
     big_df_set = set(big_df.iloc[:, 0].unique())
     day = 0
@@ -353,7 +353,10 @@ def generate_close_centra(month_list, post_name_id, month):
         for node in post_authors:
             closeness_cent = nx.closeness_centrality(G, u = node, distance='inverse_weight')
             closeness_cent_dict.update({node:closeness_cent})
-        closeness_cent = pd.DataFrame(closeness_cent_dict.items(), columns=['author', 'closeness_cent'])
+        closeness_cent = pd.DataFrame(closeness_cent_dict.items(), columns=['author', '{date}'.format(date = str(year) + '_' + str(month) + '_' + str(day))])
+        big_df.merge(closeness_cent, how='outer', on='author')
         day += 1
+    
+    return big_df
         
         
