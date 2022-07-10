@@ -333,13 +333,27 @@ def generate_sub_edgelist(month_edgelist, year, month):
 
     
     
-def generate_close_centra(month_list, post_name_id):
+def generate_close_centra(month_list, post_name_id, month):
     big_df = pd.Dataframe.from_dict(post_name_id)
     big_df = big_df.iloc[: , 1:]
-    
+    big_df_set = set(big_df.iloc[:, 0].unique())
+    day = 0
     for day_edge in month_list:
+        source_target_union = set(day_edge['Source'].unique()).union(set(day_edge['Target'].unique()))
+        
+        """
+        note that this yields the set of authors who have posted a main post in the span of 1.5 year 
+        & have posted sth within this day. It doesn't necessarily means that the person has posted a 
+        main post on this day!
+        """
+        post_authors = big_df_set.intersection(source_target_union) 
+        
         G = nx.from_pandas_edgelist(edge_list, source = "Source", target = "Target", edge_attr= ["weight", "inverse_weight"], create_using = nx.DiGraph())
-        for node in post_author_list:
+        closeness_cent_dict = {}
+        for node in post_authors:
             closeness_cent = nx.closeness_centrality(G, u = node, distance='inverse_weight')
+            closeness_cent_dict.update({node:closeness_cent})
         closeness_cent = pd.DataFrame(closeness_cent_dict.items(), columns=['author', 'closeness_cent'])
+        day += 1
+        
         
