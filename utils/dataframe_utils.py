@@ -262,17 +262,20 @@ def total_post_dict(post_df, comment_id):
         
     return total_dict
 
-def create_subedgelist(year, month, dataframe):
+def create_subedgelist(year, month, month_edgelist):
     """
-    A funtion that creates sub_dataframes from the parent dataframe based on number of days
+    A funtion that creates sub_edgelists from the parent edgelist based on number of days
     Args:
         year (int): the year
         month (int): the month
-        dataframe(pandas.dataframe): the MONTH dataframe we are examine
+        monthedgelist(pandas.dataframe): the MONTH edgelist we are examine
     Returns:
         df_list: a list of DAY dataframe
     """
-    df_list = []
+    month_list = []
+    
+    month_edgelist = month_edgelist[month_edgelist['main_is_old'] != 1]
+    
 
     day_list = workout_time(year, month)
 
@@ -280,8 +283,8 @@ def create_subedgelist(year, month, dataframe):
         left = day_list[i]
         right = day_list[i+1]
 
-        day_df = dataframe[(dataframe.source_utc >= left) & (dataframe.source_utc < right)]
+        day_edge = month_edgelist[(month_edgelist.source_utc >= left) & (month_edgelist.source_utc < right)]
 
-        df_list.append(day_df)
+        month_list.append(day_edge)
 
-    return df_list
+    return month_list
