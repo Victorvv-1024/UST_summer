@@ -355,9 +355,8 @@ def generate_close_centra(month_list, post_name_id, year, month):
             closeness_cent = nx.closeness_centrality(G, u = node, distance='inverse_weight')
             closeness_cent_dict.update({node:closeness_cent})
         closeness_cent = pd.DataFrame(closeness_cent_dict.items(), columns=['author', '{date}'.format(date = str(year) + '_' + str(month) + '_' + str(day))])
-        big_df.merge(closeness_cent, how='outer', on='author')
+        big_df = big_df.merge(closeness_cent, how='outer', on='author')
         day += 1
         print(day)
+    big_df.head()
     return big_df
-        
-        
