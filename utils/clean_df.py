@@ -23,16 +23,20 @@ def advanced_clean(name):
         bool: True if it is a bot, else False
     """
     
-    tokens = re.findall(r'[A-Z](?:[A-Z]*(?![a-z])|[a-z]*)', name)
-    tokens = list(map(lambda x: x.lower(), tokens))
+    token1 = re.findall(r'[A-Z](?:[A-Z]*(?![a-z])|[a-z]*)', name)
+    token2 =  re.split("([A-Z][^A-Z]*)", name)
+    token1 = list(map(lambda x: x.lower(), token1))
+    token2 = list(map(lambda x: x.lower(), token2))
     
-    tokens = list (map(lambda x: re.split('[^a-zA-Z]',x), tokens))
-    tokens = [item for sublist in tokens for item in sublist]
+    token1 = list (map(lambda x: re.split('[^a-zA-Z]',x), token1))
+    token2 = list (map(lambda x: re.split('[^a-zA-Z]',x), token2))
+    token1 += token2
+    token1 = [item for sublist in token1 for item in sublist]
     
-    if 'not' in tokens and 'bot' in tokens:
+    if 'not' in token1 and 'bot' in token1 :
         return False
 
-    elif 'bot' in tokens:
+    elif 'bot' in token1:
         return True
     
     return False
