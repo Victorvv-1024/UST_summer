@@ -2,6 +2,7 @@
 Functions for dataframe creation
 """
 
+from ntpath import join
 import pickle
 import pandas as pd
 import numpy as np
@@ -228,16 +229,18 @@ def create_t3_comment_id_dict(comment_df):
         dict: the key-value pair where key is the id, value is comment content
     """
     comment_id = {}
-    comment_df[comment_df['parent_id'] == comment_df['link_id']]
-    comment_df['all_comments'] = comment_df.groupby(['parent_id'])['all_comments'].transform(lambda x : ' '.join(x))
-    comment_df = comment_df.drop_duplicates()
-    for index, row in comment_df.iterrows():
-        key = row.id
-        value = row.body
+    level_1_comments = comment_df[comment_df['parent_id'] == comment_df['link_id']]
+    level_1_comments = level_1_comments[level_1_comments['parent_id'] != 0].reset_index(drop=True)
+    level_1_comments['clean_body'] = level_1_comments['clean_body'].astype(str)
+    level_1_comments['all_comments'] = level_1_comments.groupby(['parent_id'])['clean_body'].transform(lambda x : ''.join(x))
+    level_1_comments = level_1_comments.drop_duplicates()
+    for index, row in level_1_comments.iterrows():
+        key = str(row.parent_id).split('_')[-1]
+        value = row.all_comments
         
         comment_id.update({key:value})
         
-    return comment_id
+    return comment_id, level_1_comments
 
 def total_post_dict(post_df, comment_id):
     """
@@ -250,13 +253,18 @@ def total_post_dict(post_df, comment_id):
         dict: the key-value pair where key is the id of post author, value is the post content + direct comment
     """
     total_dict = {}
-    
+
     for index, row in post_df.iterrows():
-        body = row['selftext']
-        uid = str(row['parent_id']).split('_')[-1]
-        all_comments = comment_id[uid]
-        total_string = body + ' ' + all_comments
-        
+        uid = str(row['id']).split('_')[-1]
+        body = row['clean_selftext']
+        try: 
+            all_comments = comment_id[uid]
+            if body == 'removed' or pd.isna(body): total_string = all_comments
+            else: total_string = body + ' ' + all_comments
+        except: # cant find corresponding comment
+            if body == 'removed' or pd.isna(body): continue
+            else: total_string = body
+    
         key_value_pair = {uid:total_string}
         total_dict.update(key_value_pair)
         
