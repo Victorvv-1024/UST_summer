@@ -107,6 +107,7 @@ def fit_lda_model(doc_word_matrix, n_topics=10, max_iter=100, batch_size=256):
     """
     # build the model
     lda_model = LatentDirichletAllocation(n_topics=n_topics,     # Number of topics
+                                      learning_decay = 0.7,
                                       max_iter=max_iter,         # epochs
                                       learning_method='online',   
                                       random_state=100,          
